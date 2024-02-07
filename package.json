@@ -1,0 +1,41 @@
+{
+  "name": "comment-to-typescripts-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/app.ts",
+    "build": "npm run clean-dist && npm run copy-env && tsc",
+    "clean-dist": "rimraf dist",
+    "copy-env": "mkdir dist && cp .env dist/.env"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.21",
+    "@types/sequelize": "^4.28.20",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2",
+    "mysql2": "^3.9.0",
+    "node-cache": "^5.1.2",
+    "pg": "^8.11.3",
+    "sequelize": "^6.35.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.6",
+    "@types/cors": "^2.8.17",
+    "dotenv": "^16.4.1",
+    "nodemon": "^3.0.3"
+  },
+  "sequelize": {
+    "config": "config/config.json",
+    "models-path": "src/models",
+    "migrations-path": "src/migrations"
+  }
+}
