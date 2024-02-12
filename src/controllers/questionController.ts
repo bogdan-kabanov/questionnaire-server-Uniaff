@@ -6,9 +6,9 @@ const cache = new NodeCache({ stdTTL: 60 }); // Устанавливаем вр�
 class QuestionController {
   async createQuestion(req: Request, res: Response) {
     try {
-      const { name } = req.body;
+      const { name, geo, vertical } = req.body;
 
-      const question = await QuestionService.createQuestion(name);
+      const question = await QuestionService.createQuestion(name, geo, vertical);
       return res.status(201).json(question);
     } catch (error) {
       console.error("Ошибка при создании вопроса:", error);

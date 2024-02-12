@@ -1,12 +1,31 @@
 import Question from "../models/questionModel";
 import { Op } from 'sequelize';
 
-class QuestionService {
-  async createQuestion(name: string) {
-    try {
-      console.log(name);
+interface QuestionData {
+  id: number;
+  name: string;
+  geo: number;
+  vertical: number;
+}
 
-      const question = await Question.create({ name });
+class QuestionService {
+  private questionFields: Array<keyof QuestionData> = ['id', 'name', 'geo', 'vertical'];
+
+  private getQuestionData(question: Question): QuestionData {
+    const questionData: QuestionData = {} as QuestionData;
+
+    this.questionFields.forEach(field => {
+      const value = question.get(field);
+      questionData[field]
+    });
+
+    return questionData;
+  }
+
+
+  async createQuestion(name: string, geo: number, vertical: number) {
+    try {
+      const question = await Question.create({ name: name, geo: geo, vertical: vertical });
 
       return question;
     } catch (error) {
@@ -60,18 +79,13 @@ class QuestionService {
   async getQuestion(id: number) {
     const question = await Question.findByPk(id);
 
-    return question?.dataValues;
+    return question ? this.getQuestionData(question) : null;
   }
 
   async getQuestionAll() {
     try {
       const questions = await Question.findAll();
-      const questionData = questions.map((question) => {
-        return {
-          id: question.id,
-          name: question.name,
-        };
-      });
+      const questionData = questions.map(question => this.getQuestionData(question));
 
       return questionData;
     } catch (error) {
@@ -84,12 +98,12 @@ class QuestionService {
       const questions = await Question.findAll({
         where: {
           id: {
-            [Op.in]: questionIds, // Используйте оператор Op.in для поиска по нескольким ID
+            [Op.in]: questionIds,
           },
         },
       });
 
-      return questions;
+      return questions.map(question => this.getQuestionData(question));
     } catch (error) {
       console.error('Ошибка при выполнении запроса:', error);
     }

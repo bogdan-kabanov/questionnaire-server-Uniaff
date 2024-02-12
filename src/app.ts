@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
 import express from "express";
-import router from "./router/router";
 import sequelize from "./database/connect";
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
+import router from "./router/router";
 
 dotenv.config();
 const app = express();
