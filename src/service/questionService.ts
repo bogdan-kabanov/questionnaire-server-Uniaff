@@ -1,31 +1,54 @@
 import Question from "../models/questionModel";
-import { Op } from 'sequelize';
+import { Includeable, Op } from "sequelize";
+import "../models/associations"
+import QuestionGeo from "../models/questionGeoModel";
+import QuestionVertical from "../models/questionVerticalModel";
 
 interface QuestionData {
   id: number;
   name: string;
-  geo: number;
-  vertical: number;
+  geo: string | number;
+  vertical: string | number;
 }
 
 class QuestionService {
-  private questionFields: Array<keyof QuestionData> = ['id', 'name', 'geo', 'vertical'];
+  private async getQuestionData(question: Question): Promise<QuestionData> {
 
-  private getQuestionData(question: Question): QuestionData {
-    const questionData: QuestionData = {} as QuestionData;
+    const questionData: QuestionData = {
+      id: question.id,
+      name: question.name,
+      geo: question.geo,
+      vertical: question.vertical,
+    };
 
-    this.questionFields.forEach(field => {
-      const value = question.get(field);
-      questionData[field]
-    });
+    const questionWithLocation = await Question.findOne({
+      where: { geo: question.geo }, // Фильтруем вопросы по id гео
+      include: [{ model: QuestionGeo, as: 'geoData' }] as Includeable[], // Включаем связанную модель QuestionGeo
+    }) as Question & { geoData: { location_name: string } };
+
+    const questionWithVertical = await Question.findOne({
+      where: { vertical: question.vertical }, // Фильтруем вопросы по значению атрибута vertical текущего вопроса
+      include: [{ model: QuestionVertical, as: 'verticalData' }] // Включаем связанную модель QuestionVertical
+    }) as Question & { verticalData: { vertical_name: string } };
+  
+    if (questionWithLocation.geoData) {
+      questionData.geo =questionWithLocation.geoData.location_name; 
+    }
+
+    if (questionWithLocation.geoData) {
+      questionData.vertical = questionWithVertical.verticalData.vertical_name; 
+    }
 
     return questionData;
   }
 
-
   async createQuestion(name: string, geo: number, vertical: number) {
     try {
-      const question = await Question.create({ name: name, geo: geo, vertical: vertical });
+      const question = await Question.create({
+        name: name,
+        geo: geo,
+        vertical: vertical,
+      });
 
       return question;
     } catch (error) {
@@ -85,13 +108,15 @@ class QuestionService {
   async getQuestionAll() {
     try {
       const questions = await Question.findAll();
-      const questionData = questions.map(question => this.getQuestionData(question));
-
+      const questionData = await Promise.all(
+        questions.map(question => this.getQuestionData(question))
+      );
       return questionData;
     } catch (error) {
       console.error("Ошибка при получении вопросов:", error);
     }
   }
+  
 
   async getMultipleQuestions(questionIds: number[]) {
     try {
@@ -103,9 +128,9 @@ class QuestionService {
         },
       });
 
-      return questions.map(question => this.getQuestionData(question));
+      return questions.map((question) => this.getQuestionData(question));
     } catch (error) {
-      console.error('Ошибка при выполнении запроса:', error);
+      console.error("Ошибка при выполнении запроса:", error);
     }
   }
 }
