@@ -133,6 +133,25 @@ class QuestionService {
       console.error("Ошибка при выполнении запроса:", error);
     }
   }
+
+  async getQuestionsByGeo(geo: number | string) {
+    try {
+      const questions = await Question.findAll({
+        include: [{
+          model: QuestionGeo,
+          as: 'geoData',
+          where: { location_name: geo } // Фильтр по полю location_name в связанной модели
+        }]
+      });
+  
+      const questionData = await Promise.all(
+        questions.map(question => this.getQuestionData(question))
+      );
+      return questionData;
+    } catch (error) {
+      console.error("Ошибка при получении вопросов по гео:", error);
+    }
+  }
 }
 
 export default new QuestionService();

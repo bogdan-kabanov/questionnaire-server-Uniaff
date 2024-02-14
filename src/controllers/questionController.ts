@@ -60,7 +60,6 @@ class QuestionController {
     const { ids } = req.body as { ids: number[] };
 
     try {
-      // Проверяем, есть ли кэшированный результат для данного запроса
       const cacheKey = JSON.stringify(ids);
       const cachedData: any = cache.get(cacheKey);
 
@@ -69,10 +68,8 @@ class QuestionController {
         return res.status(200).json({ questionList: cachedData });
       }
 
-      // Если данных нет в кэше, загружаем их из базы данных
       const questionList = await QuestionService.getMultipleQuestions(ids);
 
-      // Кэшируем результат на заданное время
       cache.set(cacheKey, questionList);
 
       return res.status(200).json({ questionList });
@@ -85,6 +82,13 @@ class QuestionController {
   async getQuestionAll(req: Request, res: Response) {
     const questions = await QuestionService.getQuestionAll();
     return res.status(200).json({ questions });
+  }
+
+  async getQuestionsByGeo(req: Request, res: Response) {
+    const geo_id = req.params.geo_id;
+    
+    const questionsByGeo = await QuestionService.getQuestionsByGeo(geo_id);
+    return res.status(200).json({ questionsByGeo });
   }
 }
 
