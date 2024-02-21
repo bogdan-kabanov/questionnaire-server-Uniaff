@@ -19,7 +19,7 @@ app.use(
   }),
 )
 
-app.use("/api", router);
+app.use(router);
 app.use(errorMiddleware)
 
 sequelize
