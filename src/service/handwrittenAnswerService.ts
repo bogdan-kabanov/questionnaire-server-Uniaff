@@ -10,7 +10,6 @@ class HandwrittenAnswerService {
         response_text: response_text,
       });
 
-      // Если запись успешно создана, запускаем генерацию Excel файла
       if (result) {
         await excelService.generateExcelFile();
       }
@@ -18,7 +17,7 @@ class HandwrittenAnswerService {
       return result;
     } catch (error) {
       console.error("Произошла ошибка при создании записи:", error);
-      throw error; // Можно обработать ошибку или выбросить ее выше
+      throw error;
     }
   }
 

@@ -1,0 +1,833 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: REST API - Опросника
+  description: API по работе с сервером опросника
+servers:
+  - url: https://analcustdev.com/api/
+  - url: http://localhost:5000/api/
+paths:
+  /question/create:
+    post:
+      tags:
+        - question
+      summary: Создать новый вопрос
+      description: Позволяет создать новый вопрос в базе данных.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Содержимое вопроса
+                geo:
+                  type: string
+                  description: Значение географии
+                vertical:
+                  type: string
+                  description: Значение вертикали
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Уникальный идентификатор вопроса
+                  name:
+                    type: string
+                    description: Название вопроса
+                  geo:
+                    type: string
+                    description: Значение географии
+                  vertical:
+                    type: string
+                    description: Значение вертикали
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/clone/{id}:
+    post:
+      tags:
+        - question
+      summary: Клонировать вопрос
+      description: Позволяет клонировать существующий вопрос.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вопроса для клонирования
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Вопрос успешно клонирован
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+
+  /question/edit/{id}:
+    put:
+      tags:
+        - question
+      summary: Редактировать вопрос
+      description: Позволяет редактировать существующий вопрос.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вопроса
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Новое содержимое вопроса
+                geo:
+                  type: string
+                  description: Новое значение географии
+                vertical:
+                  type: string
+                  description: Новое значение вертикали
+      responses:
+        "200":
+          description: Вопрос успешно обновлен
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/remove/{id}:
+    delete:
+      tags:
+        - question
+      summary: Удалить вопрос
+      description: Позволяет удалить вопрос из базы данных.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вопроса
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Вопрос успешно удален
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/get/{id}:
+    get:
+      tags:
+        - question
+      summary: Получить детали вопроса
+      description: Позволяет получить детали конкретного вопроса по его уникальному идентификатору.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вопроса
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Детали вопроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  geo:
+                    type: string
+                  vertical:
+                    type: string
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/get-multiple:
+    get:
+      tags:
+        - question
+      summary: Получить несколько вопросов
+      description: Позволяет получить детали нескольких вопросов на основе указанных идентификаторов.
+      parameters:
+        - in: query
+          name: ids
+          required: true
+          description: Список идентификаторов вопросов для получения
+          schema:
+            type: string
+            example: "1,2,3"
+      responses:
+        "200":
+          description: Детали вопросов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    geo:
+                      type: string
+                    vertical:
+                      type: string
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/get-all/:
+    get:
+      tags:
+        - question
+      summary: Получить все вопросы
+      description: Этот эндпоинт позволяет получить список всех вопросов.
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Уникальный идентификатор вопроса
+                    name:
+                      type: string
+                      description: Название вопроса
+                    geo:
+                      type: string
+                      description: Значение географии
+                    vertical:
+                      type: string
+                      description: Значение вертикали
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/by-geo/{geo_id}:
+    get:
+      tags:
+        - question
+      summary: Получить вопросы по geo
+      description: Позволяет получить список вопросов на основе географического идентификатора.
+      parameters:
+        - in: path
+          name: geo_id
+          required: true
+          description: Географический идентификатор для фильтрации вопросов
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список вопросов по geo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    geo:
+                      type: string
+                    vertical:
+                      type: string
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопросы не найдены
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/by-vertical/{vertical_id}:
+    get:
+      tags:
+        - question
+      summary: Получить вопросы по вертикали
+      description: Позволяет получить список вопросов на основе идентификатора вертикали.
+      parameters:
+        - in: path
+          name: vertical_id
+          required: true
+          description: Идентификатор вертикали для фильтрации вопросов
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список вопросов по вертикали
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    geo:
+                      type: string
+                    vertical:
+                      type: string
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопросы не найдены
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/by-filter:
+    get:
+      tags:
+        - question
+      summary: Фильтровать вопросы по параметрам
+      description: Позволяет фильтровать вопросы на основе нескольких параметров.
+      parameters:
+        - in: query
+          name: geo
+          required: false
+          description: ID геолокации для фильтрации вопросов
+          schema:
+            type: string
+        - in: query
+          name: vertical
+          required: false
+          description: ID вертикали для фильтрации вопросов
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Список вопросов, отфильтрованных по параметрам
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    geo:
+                      type: string
+                    vertical:
+                      type: string
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /question/search/{query}:
+    get:
+      tags:
+        - question
+      summary: Поиск вопросов
+      description: Позволяет получить вопросы в которых есть свопадения с вашим запросом
+      parameters:
+         - in: path
+           name: query
+           required: true
+           description: Текст запроса
+           schema:
+            type: string
+      responses:
+        "200":
+          description: Список вопросов, подходящих под запрос
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    geo:
+                      type: string
+                    vertical:
+                      type: string
+        "404":
+          description: Вопросы не найденны
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /geo/create:
+    post:
+      tags:
+        - geo
+      summary: Добавить нову. гео-локацию
+      description: Позволяет создать новую гео-локации в базе данных.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                location_name:
+                  type: string
+                  description: Название
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Уникальный идентификатор локации
+                  location_name:
+                    type: string
+                    description: Название локации
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /geo/edit/{id}:
+     put:
+      tags:
+        - geo
+      summary: Редактировать название гео-локации
+      description: Позволяет редактировать существующую гео-локацию.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор гео-локации
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                location_name:
+                  type: string
+                  description: Новое содержимое гео-локации
+      responses:
+        "200":
+          description: Гео-локация успешно обновлена
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Гео-локация не найдена
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /geo/remove/{id}:
+    delete:
+      tags:
+        - geo
+      summary: Удалить гео-локацию
+      description: Позволяет удалить гео-локацию из базы данных.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор гео-локации
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Гео-локация успешно удалена
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Гео-локация не найдена
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /geo/get/{id}:
+    get:
+      tags:
+        - geo
+      summary: Получить гео-локацию по id
+      description: Позволяет получить название конкретной гео локации по его id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор гео-локации
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Детали гео-локации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  geo:
+                    type: string
+                  vertical:
+                    type: string
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /geo/get-all/:
+    get:
+      tags:
+        - geo
+      summary: Получить все вопросы
+      description: Этот эндпоинт позволяет получить список всех вопросов.
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Уникальный идентификатор гео-локации
+                    location_name:
+                      type: string
+                      description: Название гео-локации
+                  
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /vertical/create:
+    post:
+      tags:
+        - vertical
+      summary: Добавить нову вертикаль
+      description: Позволяет создать новую вертикаль в базе данных.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vertical_name:
+                  type: string
+                  description: Название
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Уникальный идентификатор вертикали
+                  vertical_name:
+                    type: string
+                    description: Название вертикали
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /vertical/edit/{id}:
+     put:
+      tags:
+        - vertical
+      summary: Редактировать название вертикали
+      description: Позволяет редактировать существующую вертикаль.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вертикали
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vertical_name:
+                  type: string
+                  description: Новое содержимое вертикали
+      responses:
+        "200":
+          description: Вертикаль успешно обновлена
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вертикаль не найдена
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /vertical/remove/{id}:
+    delete:
+      tags:
+        - vertical
+      summary: Удалить вертикаль
+      description: Позволяет удалить вертикаль из базы данных.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор вертикали
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Вертикаль успешно удален
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вертикаль не найдена
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /vertical/get/{id}:
+    get:
+      tags:
+        - vertical
+      summary: Получить гео-локацию по id
+      description: Позволяет получить название конкретной гео локации по его id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор гео-локации
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Детали гео-локации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  geo:
+                    type: string
+                  vertical:
+                    type: string
+        "400":
+          description: Неверный запрос
+        "404":
+          description: Вопрос не найден
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /vertical/get-all/:
+    get:
+      tags:
+        - vertical
+      summary: Получить все вертикали
+      description: Этот эндпоинт позволяет получить список всех вертикалей.
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Уникальный идентификатор вертикали
+                    vertical_name:
+                      type: string
+                      description: Название вертикали
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+  
+  /handwrittenAnswer/create:
+    post:
+      tags:
+        - handwrittenAnswer
+      summary: Создать ответ
+      description: Позволяет добавить ответ на вопрос в базу данных.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question_id:
+                  type: string
+                  description: id вопроса
+                response_text:
+                  type: string
+                  description: Содержимое ответа
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Время создания ответа
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Время обновления ответа
+                  id:
+                    type: string
+                    description: id вашего ответа
+                  question_id:
+                    type: string
+                    description: id вопроса на который вы ответили
+                  response_text:
+                    type: string
+                    description: Текст вашего ответа
+
+    #                 "createdAt": "2024-02-21T09:45:31.928Z",
+    # "updatedAt": "2024-02-21T09:45:31.928Z",
+    # "id": 1,
+    # "question_id": 1,
+    # "response_text": "Ответ 1"
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+
+  /handwrittenAnswer/:questionId:
+    get:
+      tags:
+        - handwrittenAnswer
+      summary: Получить все ответы на вопрос по его id
+      description: Этот эндпоинт позволяет получить список всех ответов на вопрос.
+      responses:
+        "200":
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Уникальный идентификатор вопроса
+                    name:
+                      type: string
+                      description: Название вертикали
+                    geo:
+                      type: number
+                      description: id гео-локации
+                      default: 1
+                    vertical:
+                      type: number
+                      description: id вертикали
+                      default: 1
+                    createdAt:
+                      type: string
+                      format: date-time
+                      description: Дата и время создания вопроса, в формате ISO 8601.
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      description: Дата и время обновления вопроса, в формате ISO 8601.
+                    handwrittenAnswers:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            description: Уникальный идентификатор ответа
+                          question_id:
+                            type: integer
+                            description: Уникальный идентификатор вопроса, к которому относится ответ
+                          response_text:
+                            type: string
+                            description: Текст ответа
+                          createdAt:
+                            type: string
+                            format: date-time
+                            description: Дата и время создания ответа, в формате ISO 8601.
+                          updatedAt:
+                            type: string
+                            format: date-time
+                            description: Дата и время обновления ответа, в формате ISO 8601.
+        "400":
+          description: Неверный запрос
+        "500":
+          description: Внутренняя ошибка сервера
+

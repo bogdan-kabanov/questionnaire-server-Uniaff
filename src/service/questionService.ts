@@ -1,31 +1,62 @@
 import Question from "../models/questionModel";
-import { Op } from 'sequelize';
+import { Includeable, Op, Sequelize } from "sequelize";
+import "../models/associations";
+import QuestionGeo from "../models/questionGeoModel";
+import QuestionVertical from "../models/questionVerticalModel";
+import ApiError from "../exceptions/apiError";
 
 interface QuestionData {
   id: number;
   name: string;
-  geo: number;
-  vertical: number;
+  geo: string | number;
+  vertical: string | number;
+  createdAt?: Date;
+}
+
+interface Filters {
+  geo?: string;
+  vertical?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 class QuestionService {
-  private questionFields: Array<keyof QuestionData> = ['id', 'name', 'geo', 'vertical'];
+  private async getQuestionData(question: Question): Promise<QuestionData> {
+    const questionData: QuestionData = {
+      id: question.id,
+      name: question.name,
+      geo: question.geo,
+      vertical: question.vertical,
+    };
 
-  private getQuestionData(question: Question): QuestionData {
-    const questionData: QuestionData = {} as QuestionData;
+    const questionWithLocation = (await Question.findOne({
+      where: { geo: question.geo },
+      include: [{ model: QuestionGeo, as: "geoData" }] as Includeable[],
+    })) as Question & { geoData: { location_name: string } };
 
-    this.questionFields.forEach(field => {
-      const value = question.get(field);
-      questionData[field]
-    });
+    const questionWithVertical = (await Question.findOne({
+      where: { vertical: question.vertical },
+      include: [{ model: QuestionVertical, as: "verticalData" }],
+    })) as Question & { verticalData: { vertical_name: string } };
+
+    if (questionWithLocation.geoData) {
+      questionData.geo = questionWithLocation.geoData.location_name;
+    }
+
+    if (questionWithLocation.geoData) {
+      questionData.vertical = questionWithVertical.verticalData.vertical_name;
+    }
 
     return questionData;
   }
 
-
   async createQuestion(name: string, geo: number, vertical: number) {
     try {
-      const question = await Question.create({ name: name, geo: geo, vertical: vertical });
+      const question = await Question.create({
+        name: name,
+        geo: geo,
+        vertical: vertical,
+      });
 
       return question;
     } catch (error) {
@@ -85,8 +116,9 @@ class QuestionService {
   async getQuestionAll() {
     try {
       const questions = await Question.findAll();
-      const questionData = questions.map(question => this.getQuestionData(question));
-
+      const questionData = await Promise.all(
+        questions.map((question) => this.getQuestionData(question))
+      );
       return questionData;
     } catch (error) {
       console.error("Ошибка при получении вопросов:", error);
@@ -102,12 +134,156 @@ class QuestionService {
           },
         },
       });
-
-      return questions.map(question => this.getQuestionData(question));
+  
+      const questionData = await Promise.all(
+        questions.map((question) => this.getQuestionData(question))
+      );
+  
+      return questionData;
     } catch (error) {
-      console.error('Ошибка при выполнении запроса:', error);
+      console.error("Ошибка при выполнении запроса:", error);
     }
   }
+
+  async getQuestionsByGeo(geo: number | string) {
+    try {
+      const questions = await Question.findAll({
+        include: [
+          {
+            model: QuestionGeo,
+            as: "geoData",
+            where: { location_name: geo },
+          },
+        ],
+      });
+
+      if (questions.length === 0) {
+        throw ApiError.NotFound("По вашему запросу вопросы не найдены", [
+          { location_name: geo },
+        ]);
+      }
+
+      const questionData = await Promise.all(
+        questions.map((question) => this.getQuestionData(question))
+      );
+      return questionData;
+    } catch (error) {
+      console.error("Ошибка при получении вопросов по гео:", error);
+      throw error;
+    }
+  }
+
+  async getQuestionsByVertical(vertical: number | string) {
+    try {
+      const questions = await Question.findAll({
+        include: [
+          {
+            model: QuestionVertical,
+            as: "verticalData",
+            where: { vertical_name: vertical },
+          },
+        ],
+      });
+
+      if (questions.length === 0) {
+        throw ApiError.NotFound("По вашему запросу вопросы не найдены", [
+          { vertical_name: vertical },
+        ]);
+      }
+
+      const questionData = await Promise.all(
+        questions.map((question) => this.getQuestionData(question))
+      );
+      return questionData;
+    } catch (error) {
+      console.error("Ошибка при получении вопросов по гео:", error);
+    }
+  }
+
+  async getQuestionsByFilters(filters: Filters): Promise<QuestionData[]> {
+
+    const queryConditions = this.createQueryConditions(filters);
+
+    try {
+      const questions = await Question.findAll(queryConditions);
+
+      if (questions && questions.length > 0) {
+        const questionData = questions.map((question) =>
+          this.formatQuestionData(question)
+        );
+        return questionData;
+      } else {
+        throw new Error("Вопросы по заданным критериям не найдены.");
+      }
+    } catch (error) {
+      console.error("Ошибка при получении вопросов:", error);
+      throw error;
+    }
+  }
+
+  private createQueryConditions(filters: Filters) {
+    const conditions: any = {
+      where: {},
+      include: [],
+    };
+
+    if (filters.geo) {
+      conditions.include.push({
+        model: QuestionGeo,
+        as: "geoData",
+        where: { location_name: filters.geo },
+      });
+    }
+
+    if (filters.vertical) {
+      conditions.include.push({
+        model: QuestionVertical,
+        as: "verticalData",
+        where: { vertical_name: filters.vertical },
+      });
+    }
+
+
+    if (filters.startTime || filters.endTime) {
+      conditions.where.createdAt = {};
+      if (filters.startTime)
+        conditions.where.createdAt[Op.gte] = new Date(filters.startTime);
+      if (filters.endTime)
+        conditions.where.createdAt[Op.lte] = new Date(filters.endTime);
+    }
+
+    return conditions;
+  }
+
+  async searchQuestions(query: string): Promise<QuestionData[]> {
+    try {
+      const questions = await Question.findAll({
+        where: {
+          name: {
+            [Op.iLike]: `%${query}%`
+          }
+        }
+      });
+  
+      return questions.map(question => this.formatQuestionData(question));
+    } catch (error) {
+      console.error("Ошибка при поиске вопросов:", error);
+      throw error;
+    }
+  }
+  
+
+  private formatQuestionData(question: any): QuestionData {
+    return {
+      id: question.id,
+      name: question.name,
+      geo: question.geoData ? question.geoData.location_name : undefined,
+      vertical: question.verticalData ? question.verticalData.vertical_name : undefined,
+      createdAt: question.createdAt
+    };
+  }
+
+
 }
 
 export default new QuestionService();
