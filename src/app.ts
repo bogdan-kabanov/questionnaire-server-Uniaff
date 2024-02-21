@@ -4,6 +4,7 @@ import sequelize from "./database/connect";
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import router from "./router/router";
+import errorMiddleware from "./middleware/errorMiddleware"
 
 dotenv.config();
 const app = express();
@@ -19,6 +20,7 @@ app.use(
 )
 
 app.use("/api", router);
+app.use(errorMiddleware)
 
 sequelize
   .authenticate()
