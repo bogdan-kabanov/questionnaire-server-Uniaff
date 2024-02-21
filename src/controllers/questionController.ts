@@ -1,14 +1,18 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import QuestionService from "../service/questionService";
-import NodeCache from 'node-cache'; // Убедитесь, что библиотека node-cache установлена
-const cache = new NodeCache({ stdTTL: 60 }); // Устанавливаем время жизни кэша в секундах (например, 60 секунд)
+import NodeCache from "node-cache";
+const cache = new NodeCache({ stdTTL: 60 });
 
 class QuestionController {
   async createQuestion(req: Request, res: Response) {
     try {
       const { name, geo, vertical } = req.body;
 
-      const question = await QuestionService.createQuestion(name, geo, vertical);
+      const question = await QuestionService.createQuestion(
+        name,
+        geo,
+        vertical
+      );
       return res.status(201).json(question);
     } catch (error) {
       console.error("Ошибка при создании вопроса:", error);
@@ -78,17 +82,65 @@ class QuestionController {
       return res.status(500).json({ error: "Ошибка при загрузке вопросов" });
     }
   }
-  
+
   async getQuestionAll(req: Request, res: Response) {
     const questions = await QuestionService.getQuestionAll();
     return res.status(200).json({ questions });
   }
 
-  async getQuestionsByGeo(req: Request, res: Response) {
-    const geo_id = req.params.geo_id;
-    
-    const questionsByGeo = await QuestionService.getQuestionsByGeo(geo_id);
-    return res.status(200).json({ questionsByGeo });
+  async getQuestionsByGeo(req: Request, res: Response, next: NextFunction) {
+    try {
+      const geo_id = req.params.geo_id;
+
+      const questionsByGeo = await QuestionService.getQuestionsByGeo(geo_id);
+      return res.status(200).json({ questionsByGeo });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getQuestionsByVertical(req: Request, res: Response) {
+    const vertical_id = req.params.vertical_id;
+
+    const questionsByVertical = await QuestionService.getQuestionsByVertical(
+      vertical_id
+    );
+    return res.status(200).json({ questionsByVertical });
+  }
+
+  async getQuestionsByFilters(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { geo, vertical, startTime, endTime } = req.query;
+
+      const questions = await QuestionService.getQuestionsByFilters({
+        geo: geo as string | undefined,
+        vertical: vertical as string | undefined,
+        startTime: startTime as string | undefined,
+        endTime: endTime as string | undefined,
+      });
+
+      res.json(questions);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getQuestionByName(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const name = req.params.name;
+      const questions = await QuestionService.searchQuestions(name);
+      res.json(questions);
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
